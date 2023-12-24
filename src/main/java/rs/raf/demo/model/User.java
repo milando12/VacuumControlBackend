@@ -34,5 +34,5 @@ public class User {
     private String password;
 
     @Column
-    private String permissions;
+    private String permissions; // comma separated list of permissions(can_read_users,can_create_users,can_update_users,can_delete_users)
 }

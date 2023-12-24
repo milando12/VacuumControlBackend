@@ -13,7 +13,9 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    public User findByEmail(String email);
+    User findByEmail(String email);
+
+
 
 //    @Modifying
 //    @Query("update User u set u.balance = u.balance + :amount")
