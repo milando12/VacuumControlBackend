@@ -11,9 +11,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
+import rs.raf.demo.responses.UserUpdateResponse;
 import rs.raf.demo.services.UserService;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -36,7 +39,7 @@ public class UserController {
         return ResponseEntity.ok(this.userService.create(user));
     }
 
-    @GetMapping(value = "/read/all")
+    @GetMapping(value = "/read/all/paginated")
     public ResponseEntity<Page<User>> all(@RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "10") Integer size) {
         if (!SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new Permission("can_read_users"))) {
@@ -45,22 +48,42 @@ public class UserController {
         return ResponseEntity.ok(this.userService.paginate(page, size));
     }
 
-    @DeleteMapping(value = "/delete/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    @GetMapping(value = "/read/all")
+    public ResponseEntity<List<User>> all() {
         if (!SecurityContextHolder.getContext().getAuthentication()
-                .getAuthorities().contains(new Permission("can_delete_users"))) {
+                .getAuthorities().contains(new Permission("can_read_users"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        this.userService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(this.userService.findAll());
     }
 
-    @PutMapping(value = "/update/{id}")
-    public ResponseEntity<User> update(@PathVariable Long id, @Valid @RequestBody User user) {
+    @GetMapping(value = "/read/{email}")
+    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
         if (!SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new Permission("can_update_users"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.ok(this.userService.update(id, user));
+        return ResponseEntity.ok(this.userService.getByEmail(email));
+    }
+
+
+    @DeleteMapping(value = "/delete/{email}")
+    public ResponseEntity<?> delete(@PathVariable String email) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_delete_users"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        this.userService.delete(email);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping(value = "/update")
+    public ResponseEntity<?> update(@RequestBody UserUpdateResponse user) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_update_users"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        this.userService.update(user);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

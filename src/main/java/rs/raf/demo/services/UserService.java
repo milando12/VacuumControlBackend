@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
 import rs.raf.demo.repositories.UserRepository;
+import rs.raf.demo.responses.UserUpdateResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,14 +34,12 @@ public class UserService implements UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     private UserRepository userRepository;
-    private TaskScheduler taskScheduler;
 
     @Autowired
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, TaskScheduler taskScheduler) {
+    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository) {
         this.passwordEncoder = passwordEncoder;
 
         this.userRepository = userRepository;
-        this.taskScheduler = taskScheduler;
     }
 
     @Override
@@ -51,9 +50,7 @@ public class UserService implements UserDetailsService {
         }
 // you can set permissions here
         return new org.springframework.security.core.userdetails.User(myUser.getEmail(), myUser.getPassword()
-//                , new ArrayList<>());
                 , getAuthorities(myUser.getEmail()));
-//        Arrays.asList((GrantedAuthority)() -> "READ", (GrantedAuthority)()->"WRITE")
     }
 
     private ArrayList<GrantedAuthority> getAuthorities(String email){
@@ -61,6 +58,9 @@ public class UserService implements UserDetailsService {
         ArrayList<GrantedAuthority> authorities = new ArrayList<>();
         if(user.isPresent()){
             User u = user.get();
+            if(u.getPermissions() == null) {
+                return authorities;
+            }
             for (String permission: u.getPermissions().split(",")) {
                 System.out.println("permission: " + permission);
                 authorities.add(new Permission(permission));;
@@ -79,14 +79,29 @@ public class UserService implements UserDetailsService {
         return this.userRepository.findAll(PageRequest.of(page, size));
     }
 
-    public void delete(Long id) {
-        this.userRepository.deleteById(id);
+    public List<User> findAll() {
+        return this.userRepository.findAll();
     }
 
-    public User update(Long id, User user) {
-        User oldUser = this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
-        user.setId(oldUser.getId());
-        user.setPassword(oldUser.getPassword());
-        return this.userRepository.save(user);
+    public void delete(String email) {
+        this.userRepository.deleteByEmail(email);
+    }
+
+    public User update(UserUpdateResponse user) {
+//          would be more elegant if I made a mapper class
+        Optional<User> u = this.userRepository.findById(user.getId());
+        if(!u.isPresent()) {
+            return null;
+        }else {
+            u.get().setName(user.getName());
+            u.get().setSurname(user.getSurname());
+            u.get().setEmail(user.getEmail());
+            u.get().setPermissions(user.getPermissions());
+            return this.userRepository.save(u.get());
+        }
+    }
+
+    public User getByEmail(String email) {
+        return this.userRepository.findByEmail(email);
     }
 }

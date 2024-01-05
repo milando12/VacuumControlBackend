@@ -34,8 +34,6 @@ public class AuthController {
             e.printStackTrace();
             return ResponseEntity.status(401).build();
         }
-        // do I need this line?
-//        this.userService.loggedIn(loginRequest.getEmail());
 
         return ResponseEntity.ok(new LoginResponse(jwtUtil.generateToken(loginRequest.getEmail())));
     }

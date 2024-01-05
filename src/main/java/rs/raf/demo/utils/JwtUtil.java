@@ -57,6 +57,9 @@ public class JwtUtil {
         ArrayList<String> authorities = new ArrayList<>();
         if(user.isPresent()){
             User u = user.get();
+            if(u.getPermissions() == null) {
+                return authorities;
+            }
             for (String permission: u.getPermissions().split(",")) {
                 authorities.add(permission);;
             }
