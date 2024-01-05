@@ -5,9 +5,12 @@ import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 @Entity
 @Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -34,5 +37,11 @@ public class User {
     private String password;
 
     @Column
-    private String permissions; // comma separated list of permissions(can_read_users,can_create_users,can_update_users,can_delete_users)
+    private String permissions; // comma separated list of permissions
+    // (can_read_users,can_create_users,can_update_users,can_delete_users)
+    // (can_search_vacuum,can_start_vacuum,can_stop_vacuum)
+    // (can_discharge_vacuum,can_add_vacuum,can_remove_vacuums)
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Vacuum> vacuums;
 }
