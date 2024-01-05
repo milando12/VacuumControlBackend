@@ -5,17 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
-import rs.raf.demo.responses.UserUpdateResponse;
+import rs.raf.demo.requests.UserUpdateRequest;
 import rs.raf.demo.services.UserService;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -29,6 +26,9 @@ public class UserController {
     public UserController(UserService userService) {
         this.userService = userService;
     }
+
+
+//  Methods:
 
     @PostMapping(value = "/create", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<User> create(@Valid @RequestBody User user) {
@@ -78,7 +78,7 @@ public class UserController {
     }
 
     @PutMapping(value = "/update")
-    public ResponseEntity<?> update(@RequestBody UserUpdateResponse user) {
+    public ResponseEntity<?> update(@RequestBody UserUpdateRequest user) {
         if (!SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new Permission("can_update_users"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

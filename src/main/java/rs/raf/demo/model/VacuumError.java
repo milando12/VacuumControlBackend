@@ -1,5 +1,6 @@
 package rs.raf.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.*;
 import rs.raf.demo.model.enums.VacuumOperation;
 
@@ -32,5 +33,6 @@ public class VacuumError {
 
     @ManyToOne
     @JoinColumn(name = "vacuum_id", referencedColumnName = "id")
+    @JsonBackReference
     private Vacuum vacuum;
 }

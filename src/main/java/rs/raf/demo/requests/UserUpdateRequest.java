@@ -1,4 +1,4 @@
-package rs.raf.demo.responses;
+package rs.raf.demo.requests;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import javax.persistence.Entity;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UserUpdateResponse {
+public class UserUpdateRequest {
     private Long id;
     private String name;
     private String surname;

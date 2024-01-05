@@ -1,5 +1,7 @@
 package rs.raf.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -43,5 +45,7 @@ public class User {
     // (can_discharge_vacuum,can_add_vacuum,can_remove_vacuums)
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @ToString.Exclude
     private List<Vacuum> vacuums;
 }

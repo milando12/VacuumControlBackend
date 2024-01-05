@@ -1,5 +1,8 @@
 package rs.raf.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import rs.raf.demo.model.enums.Status;
 
@@ -8,7 +11,7 @@ import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.util.List;
 
-@Entity
+@Entity(name = "vacuums")
 @Data
 @Getter
 @Setter
@@ -35,8 +38,11 @@ public class Vacuum {
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JsonBackReference
     private User user;
 
     @OneToMany(mappedBy = "vacuum", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @ToString.Exclude
     private List<VacuumError> vacuumErrors;
 }

@@ -3,28 +3,18 @@ package rs.raf.demo.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.support.CronTrigger;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
 import rs.raf.demo.repositories.UserRepository;
-import rs.raf.demo.responses.UserUpdateResponse;
+import rs.raf.demo.requests.UserUpdateRequest;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,7 +77,7 @@ public class UserService implements UserDetailsService {
         this.userRepository.deleteByEmail(email);
     }
 
-    public User update(UserUpdateResponse user) {
+    public User update(UserUpdateRequest user) {
 //          would be more elegant if I made a mapper class
         Optional<User> u = this.userRepository.findById(user.getId());
         if(!u.isPresent()) {
