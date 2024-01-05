@@ -42,7 +42,7 @@ public class User {
     private String permissions; // comma separated list of permissions
     // (can_read_users,can_create_users,can_update_users,can_delete_users)
     // (can_search_vacuum,can_start_vacuum,can_stop_vacuum)
-    // (can_discharge_vacuum,can_add_vacuum,can_remove_vacuums)
+    // (can_discharge_vacuum,can_add_vacuum,can_remove_vacuum)
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference

@@ -36,8 +36,16 @@ public class VacuumController {
                 .getAuthorities().contains(new Permission("can_add_vacuum"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        System.out.println("VacuumController.add");
         return ResponseEntity.ok(this.vacuumService.add(vacuumRequest));
+    }
+
+    @GetMapping(value = "/remove/{id}")
+    public ResponseEntity<Boolean> remove(@PathVariable("id") Long id) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_remove_vacuum"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(this.vacuumService.remove(id));
     }
 
     @GetMapping(value = "/read/all")
@@ -46,7 +54,6 @@ public class VacuumController {
                 .getAuthorities().contains(new Permission("can_search_vacuum"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        System.out.println("VacuumController.all");
         return ResponseEntity.ok(this.vacuumService.findAll());
     }
 

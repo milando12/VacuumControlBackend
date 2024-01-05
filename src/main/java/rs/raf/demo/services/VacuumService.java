@@ -34,8 +34,21 @@ public class VacuumService {
         vacuum.setActive(true);
         vacuum.setCreationTime(java.time.LocalDate.now());
         vacuum.setUser(this.getUser());
+        this.getUser().getVacuums().add(vacuum);
+//        probably not needed because it is in managed state
+        userRepository.save(this.getUser());
 
         return this.vacuumRepository.save(vacuum);
+    }
+
+    public Boolean remove(Long id) {
+        Vacuum vacuum = this.vacuumRepository.findById(id).orElse(null);
+        if (vacuum == null || vacuum.getStatus()!= Status.STOPPED) {
+            return false;
+        }
+        vacuum.setActive(false);
+        this.vacuumRepository.save(vacuum);
+        return true;
     }
 
     // Test

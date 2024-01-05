@@ -36,7 +36,7 @@ public class BootstrapData implements CommandLineRunner {
         admin.setSurname("Admin");
         admin.setEmail("admin@gmail.com");
         admin.setPassword(this.passwordEncoder.encode("admin"));
-        admin.setPermissions("can_create_users,can_read_users,can_update_users,can_delete_users,can_search_vacuum,can_start_vacuum,can_stop_vacuum,can_discharge_vacuum,can_add_vacuum,can_remove_vacuums");
+        admin.setPermissions("can_create_users,can_read_users,can_update_users,can_delete_users,can_search_vacuum,can_start_vacuum,can_stop_vacuum,can_discharge_vacuum,can_add_vacuum,can_remove_vacuum");
         this.userRepository.save(admin);
 //        eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbkBnbWFpbC5jb20iLCJwZXJtaXNzaW9ucyI6WyJjYW5fY3JlYXRlX3VzZXJzIiwiY2FuX3JlYWRfdXNlcnMiLCJjYW5fdXBkYXRlX3VzZXJzIiwiY2FuX2RlbGV0ZV91c2VycyJdLCJleHAiOjE3MDQ0MDg1MzEsImlhdCI6MTcwNDM3MjUzMX0.Qnw4Fc67urhl0cWhwGcrRf2zQRVHzINDX0ekHdJqScdTBV2gfx8_uWlQvSYGuQY3IqSwKADq0DBe8I22DkPygg
 
@@ -71,7 +71,17 @@ public class BootstrapData implements CommandLineRunner {
         v1.setActive(true);
         v1.setCreationTime(java.time.LocalDate.now());
         v1.setUser(admin);
+        admin.getVacuums().add(v1);
         this.vacuumRepository.save(v1);
+
+        Vacuum v2 = new Vacuum();
+        v2.setName("Vacuum 2");
+        v2.setStatus(Status.STOPPED);
+        v2.setActive(true);
+        v2.setCreationTime(java.time.LocalDate.now());
+        v2.setUser(c);
+        c.getVacuums().add(v2);
+        this.vacuumRepository.save(v2);
 
         System.out.println("Data loaded!");
     }
