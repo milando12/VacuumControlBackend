@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
 import rs.raf.demo.model.Vacuum;
+import rs.raf.demo.requests.FilterRequest;
 import rs.raf.demo.requests.VacuumRequest;
 import rs.raf.demo.services.UserService;
 import rs.raf.demo.services.VacuumService;
@@ -48,13 +49,32 @@ public class VacuumController {
         return ResponseEntity.ok(this.vacuumService.remove(id));
     }
 
-    @GetMapping(value = "/read/all")
+    @GetMapping(value = "/all")
     public ResponseEntity<List<Vacuum>> all() {
         if (!SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().contains(new Permission("can_search_vacuum"))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(this.vacuumService.findAll());
+    }
+
+    @PostMapping(value = "/filter")
+    public ResponseEntity<List<Vacuum>> search(@RequestBody FilterRequest filterRequest) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_search_vacuum"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(this.vacuumService.search(filterRequest));
+    }
+
+//    TestMethod:
+    @GetMapping(value = "/read/all")
+    public ResponseEntity<List<Vacuum>> readAll() {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_search_vacuum"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(this.vacuumService.findEveryone());
     }
 
 }
