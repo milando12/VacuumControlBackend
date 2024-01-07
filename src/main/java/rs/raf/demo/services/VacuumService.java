@@ -3,6 +3,7 @@ package rs.raf.demo.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import rs.raf.demo.dto.Mapper;
 import rs.raf.demo.model.User;
 import rs.raf.demo.model.Vacuum;
 import rs.raf.demo.model.enums.Status;
@@ -10,6 +11,7 @@ import rs.raf.demo.repositories.UserRepository;
 import rs.raf.demo.repositories.VacuumRepository;
 import rs.raf.demo.requests.FilterRequest;
 import rs.raf.demo.requests.VacuumRequest;
+import rs.raf.demo.responses.VacuumResponse;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -41,8 +43,6 @@ public class VacuumService {
         vacuum.setCreationTime(java.time.LocalDate.now());
         vacuum.setUser(this.getUser());
         this.getUser().getVacuums().add(vacuum);
-//        probably not needed because it is in managed state
-        userRepository.save(this.getUser());
 
         return this.vacuumRepository.save(vacuum);
     }
@@ -62,20 +62,22 @@ public class VacuumService {
     }
 
 //  Prettiest solution:     <3
-    public List<Vacuum> search(FilterRequest filterRequest) {
-        String name = filterRequest.getName();
-        List<Status> statuses = getStatuses(filterRequest.getStatuses());
-        String dateFrom = filterRequest.getDateFrom();  // yyyy-MM-dd
-        String dateTo = filterRequest.getDateTo();
-        Long userId= getUser().getId();
+public List<VacuumResponse> search(FilterRequest filterRequest) {
+    String name = filterRequest.getName();
+    List<Status> statuses = getStatuses(filterRequest.getStatuses());
+    String dateFrom = filterRequest.getDateFrom();  // yyyy-MM-dd
+    String dateTo = filterRequest.getDateTo();
+    Long userId = getUser().getId();
 
-        return this.vacuumRepository.findAllByActiveIsTrueAndUser_Id(userId).stream()
-                .filter(vacuum -> name == null || vacuum.getName().toLowerCase().contains(name.toLowerCase()))
-                .filter(vacuum -> statuses == null || statuses.isEmpty() || statuses.contains(vacuum.getStatus()))
-                .filter(vacuum -> dateFrom == null || isValidDate(dateFrom) || vacuum.getCreationTime().isAfter(LocalDate.parse(dateFrom)))
-                .filter(vacuum -> dateTo == null || isValidDate(dateTo) || vacuum.getCreationTime().isBefore(LocalDate.parse(dateTo)))
-                .collect(Collectors.toList());
-    }
+    return this.vacuumRepository.findAllByActiveIsTrueAndUser_Id(userId).stream()
+            .filter(vacuum -> name == null || vacuum.getName().toLowerCase().contains(name.toLowerCase()))
+            .filter(vacuum -> statuses == null || statuses.isEmpty() || statuses.contains(vacuum.getStatus()))
+            .filter(vacuum -> dateFrom == null || isValidDate(dateFrom) || vacuum.getCreationTime().isAfter(LocalDate.parse(dateFrom)))
+            .filter(vacuum -> dateTo == null || isValidDate(dateTo) || vacuum.getCreationTime().isBefore(LocalDate.parse(dateTo)))
+            .map(Mapper::vacuumToVacuumResponse)
+            .collect(Collectors.toList());
+}
+
 
     // Test
     public List<Vacuum> findEveryone() {
