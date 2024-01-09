@@ -22,6 +22,9 @@ public class Vacuum {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @Column
     @NotBlank(message = "Name is mandatory")
     private String name;
@@ -35,6 +38,15 @@ public class Vacuum {
 
     @Column
     private LocalDate creationTime;
+
+    // number of times vacuum has been used since last discharge
+    @Column
+    private Integer usageCount;
+
+    // boolean carrying information whether some operation is in progress
+    // it should not be stored in the database and is false by default, if it is true, than the vacuum is busy
+    @Column(name = "busyVac")
+    private Boolean busy;
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")

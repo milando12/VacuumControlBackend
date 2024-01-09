@@ -52,7 +52,7 @@ public class UserService implements UserDetailsService {
                 return authorities;
             }
             for (String permission: u.getPermissions().split(",")) {
-                System.out.println("permission: " + permission);
+//                System.out.println("permission: " + permission);
                 authorities.add(new Permission(permission));;
             }
         }

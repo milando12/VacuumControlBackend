@@ -1,8 +1,10 @@
 package rs.raf.demo.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rs.raf.demo.dto.Mapper;
 import rs.raf.demo.model.User;
 import rs.raf.demo.model.Vacuum;
@@ -18,6 +20,8 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 
@@ -62,7 +66,7 @@ public class VacuumService {
     }
 
 //  Prettiest solution:     <3
-public List<VacuumResponse> search(FilterRequest filterRequest) {
+    public List<VacuumResponse> search(FilterRequest filterRequest) {
     String name = filterRequest.getName();
     List<Status> statuses = getStatuses(filterRequest.getStatuses());
     String dateFrom = filterRequest.getDateFrom();  // yyyy-MM-dd
@@ -78,6 +82,83 @@ public List<VacuumResponse> search(FilterRequest filterRequest) {
             .collect(Collectors.toList());
 }
 
+// Start, Stop, Discharge
+    //TODO: Add time standard deviation
+    @Async
+    public CompletableFuture<Void> start(Long id) {
+        Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+        if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
+            System.err.println("Invalid operation on the vacuum.");
+            System.out.println(vacuum.getStatus());
+            throw new IllegalStateException("Invalid operation on the vacuum.");
+
+        }
+
+        vacuum.setBusy(true);
+        vacuumRepository.save(vacuum);
+
+        simulateDelay(15); // Stay with the same status for 15 seconds
+        vacuum.setStatus(Status.RUNNING);
+        vacuum.setBusy(false);
+        vacuumRepository.save(vacuum);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Async
+    public CompletableFuture<Void> stop(Long id) {
+        Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+        if (vacuum == null || !vacuum.getStatus().equals(Status.RUNNING) || vacuum.getBusy()) {
+            throw new IllegalStateException("Invalid operation on the vacuum.");
+        }
+
+        vacuum.setBusy(true);
+        vacuumRepository.save(vacuum);
+
+        simulateDelay(15); // Stay with the same status for 15 seconds
+        vacuum.setStatus(Status.STOPPED);
+        vacuum.setBusy(false);
+        vacuumRepository.save(vacuum);
+
+        if(vacuum.getUsageCount()== 2){
+            discharge(id);
+        }
+        else{
+            vacuum.setUsageCount(vacuum.getUsageCount()+1);
+            vacuumRepository.save(vacuum);
+        }
+
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Async
+    public CompletableFuture<Void> discharge(Long id) {
+        Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+        if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
+            throw new IllegalStateException("Invalid operation on the vacuum.");
+        }
+
+        vacuum.setBusy(true);
+        vacuumRepository.save(vacuum);
+
+        simulateDelay(15); // Stay with the same status for 15 seconds
+        vacuum.setStatus(Status.DISCHARGING);
+        vacuumRepository.save(vacuum);
+
+        simulateDelay(15); // Simulate discharge delay
+        vacuum.setStatus(Status.STOPPED);
+        vacuum.setUsageCount(0);
+        vacuum.setBusy(false);
+        vacuumRepository.save(vacuum);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private void simulateDelay(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     // Test
     public List<Vacuum> findEveryone() {

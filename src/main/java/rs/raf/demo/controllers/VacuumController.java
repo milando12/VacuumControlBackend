@@ -59,6 +59,37 @@ public class VacuumController {
         return ResponseEntity.ok(this.vacuumService.search(filterRequest));
     }
 
+//    Start, Stop and Discharge
+    @PostMapping(value = "/start/{id}")
+    public ResponseEntity<Void> start(@PathVariable("id") Long id) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_start_vacuum"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        vacuumService.start(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/stop/{id}")
+    public ResponseEntity<Void> stop(@PathVariable("id") Long id) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_stop_vacuum"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        vacuumService.stop(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/discharge/{id}")
+    public ResponseEntity<Void> discharge(@PathVariable("id") Long id) {
+        if (!SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().contains(new Permission("can_discharge_vacuum"))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        vacuumService.discharge(id);
+        return ResponseEntity.ok().build();
+    }
+
 //    TestMethod:
 
     @GetMapping(value = "/read/all")

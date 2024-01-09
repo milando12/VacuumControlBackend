@@ -103,6 +103,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumAdmin.setActive(true);
         vacuumAdmin.setCreationTime(java.time.LocalDate.now());
         vacuumAdmin.setUser(admin);
+        vacuumAdmin.setBusy(false);
+        vacuumAdmin.setUsageCount(0);
         this.vacuumRepository.save(vacuumAdmin);
 
         Vacuum vacuumCreateUserOnly = new Vacuum();
@@ -111,6 +113,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumCreateUserOnly.setActive(true);
         vacuumCreateUserOnly.setCreationTime(java.time.LocalDate.now());
         vacuumCreateUserOnly.setUser(createUserOnly);
+        vacuumCreateUserOnly.setBusy(false);
+        vacuumCreateUserOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumCreateUserOnly);
 
         Vacuum vacuumReadUserOnly = new Vacuum();
@@ -119,6 +123,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumReadUserOnly.setActive(true);
         vacuumReadUserOnly.setCreationTime(java.time.LocalDate.now());
         vacuumReadUserOnly.setUser(readUserOnly);
+        vacuumReadUserOnly.setBusy(false);
+        vacuumReadUserOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumReadUserOnly);
 
         Vacuum vacuumUpdateUserOnly = new Vacuum();
@@ -127,6 +133,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumUpdateUserOnly.setActive(true);
         vacuumUpdateUserOnly.setCreationTime(java.time.LocalDate.now());
         vacuumUpdateUserOnly.setUser(updateUserOnly);
+        vacuumUpdateUserOnly.setBusy(false);
+        vacuumUpdateUserOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumUpdateUserOnly);
 
         Vacuum vacuumDeleteUserOnly = new Vacuum();
@@ -135,6 +143,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumDeleteUserOnly.setActive(true);
         vacuumDeleteUserOnly.setCreationTime(java.time.LocalDate.now());
         vacuumDeleteUserOnly.setUser(deleteUserOnly);
+        vacuumDeleteUserOnly.setBusy(false);
+        vacuumDeleteUserOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumDeleteUserOnly);
 
         Vacuum vacuumSearchVacuumOnly = new Vacuum();
@@ -143,6 +153,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumSearchVacuumOnly.setActive(true);
         vacuumSearchVacuumOnly.setCreationTime(java.time.LocalDate.now());
         vacuumSearchVacuumOnly.setUser(searchVacuumOnly);
+        vacuumSearchVacuumOnly.setBusy(false);
+        vacuumSearchVacuumOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumSearchVacuumOnly);
 
         Vacuum vacuumStartVacuumOnly = new Vacuum();
@@ -151,6 +163,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumStartVacuumOnly.setActive(true);
         vacuumStartVacuumOnly.setCreationTime(java.time.LocalDate.now());
         vacuumStartVacuumOnly.setUser(startVacuumOnly);
+        vacuumStartVacuumOnly.setBusy(false);
+        vacuumStartVacuumOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumStartVacuumOnly);
 
         Vacuum vacuumStopVacuumOnly = new Vacuum();
@@ -159,9 +173,11 @@ public class BootstrapData implements CommandLineRunner {
         vacuumStopVacuumOnly.setActive(true);
         vacuumStopVacuumOnly.setCreationTime(java.time.LocalDate.now());
         vacuumStopVacuumOnly.setUser(stopVacuumOnly);
+        vacuumStopVacuumOnly.setBusy(false);
+        vacuumStopVacuumOnly.setUsageCount(0);
         this.vacuumRepository.save(vacuumStopVacuumOnly);
 
-        // Additional Vacuums for Admin:
+// Additional Vacuums for Admin:
 
         Vacuum vacuumAdmin2 = new Vacuum();
         vacuumAdmin2.setName("VacuumAdmin2");
@@ -169,6 +185,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumAdmin2.setActive(true);
         vacuumAdmin2.setCreationTime(java.time.LocalDate.now().minusDays(1));
         vacuumAdmin2.setUser(admin);
+        vacuumAdmin2.setBusy(false);
+        vacuumAdmin2.setUsageCount(0);
         this.vacuumRepository.save(vacuumAdmin2);
 
         Vacuum vacuumAdmin3 = new Vacuum();
@@ -177,6 +195,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumAdmin3.setActive(true);
         vacuumAdmin3.setCreationTime(java.time.LocalDate.now().minusDays(2));
         vacuumAdmin3.setUser(admin);
+        vacuumAdmin3.setBusy(false);
+        vacuumAdmin3.setUsageCount(0);
         this.vacuumRepository.save(vacuumAdmin3);
 
         Vacuum vacuumAdmin4 = new Vacuum();
@@ -185,6 +205,8 @@ public class BootstrapData implements CommandLineRunner {
         vacuumAdmin4.setActive(true);
         vacuumAdmin4.setCreationTime(java.time.LocalDate.now().minusDays(3));
         vacuumAdmin4.setUser(admin);
+        vacuumAdmin4.setBusy(false);
+        vacuumAdmin4.setUsageCount(0);
         this.vacuumRepository.save(vacuumAdmin4);
 
         Vacuum vacuumAdmin5 = new Vacuum();
@@ -193,7 +215,10 @@ public class BootstrapData implements CommandLineRunner {
         vacuumAdmin5.setActive(true);
         vacuumAdmin5.setCreationTime(java.time.LocalDate.now().minusDays(4));
         vacuumAdmin5.setUser(admin);
+        vacuumAdmin5.setBusy(false);
+        vacuumAdmin5.setUsageCount(0);
         this.vacuumRepository.save(vacuumAdmin5);
+
 
 
         System.out.println("Data loaded!");
