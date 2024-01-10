@@ -6,7 +6,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rs.raf.demo.dto.Mapper;
+import rs.raf.demo.dto.responses.VacuumErrorResponse;
 import rs.raf.demo.model.User;
 import rs.raf.demo.model.Vacuum;
 import rs.raf.demo.model.VacuumError;
@@ -24,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -92,40 +95,48 @@ public class VacuumService {
 
 // Start, Stop, Discharge
     //TODO: Add time standard deviation
+    //TODO: catch ObjectOptimisticLockingFailureException and logg it, just a try-catching block around the save method
     @Async
     public CompletableFuture<Void> start(Long id) throws IllegalStateException{
         System.out.println("Starting vacuum with id: " + id);
-
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+
         if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
-            System.err.println("Invalid operation on the vacuum.");
-            System.out.println(vacuum.getStatus());
+            logError(vacuum, VacuumOperation.START, (vacuum.getBusy())? "Vacuum was busy." : "Vacuum was not stopped.");
             throw new IllegalStateException("Invalid operation on the vacuum.");
         }
 
         vacuum.setBusy(true);
         vacuumRepository.save(vacuum);
+//        System.out.println("Busy set to true "+ vacuumRepository.findById(id));
 
-        simulateDelay(15); // Stay with the same status for 15 seconds
+        simulateDelay(15);
+
+        vacuum= vacuumRepository.findById(id).orElse(null);
         vacuum.setStatus(Status.RUNNING);
         vacuum.setBusy(false);
         vacuumRepository.save(vacuum);
+//        System.out.println("Busy set to false "+ vacuumRepository.findById(id));
+
         return CompletableFuture.completedFuture(null);
     }
 
     @Async
     public CompletableFuture<Void> stop(Long id) throws IllegalStateException{
         System.out.println("Stopping vacuum with id: " + id);
-
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+
         if (vacuum == null || !vacuum.getStatus().equals(Status.RUNNING) || vacuum.getBusy()) {
+            logError(vacuum, VacuumOperation.STOP, (vacuum.getBusy())? "Vacuum was busy." : "Vacuum was not running.");
             throw new IllegalStateException("Invalid operation on the vacuum.");
         }
 
         vacuum.setBusy(true);
         vacuumRepository.save(vacuum);
 
-        simulateDelay(15); // Stay with the same status for 15 seconds
+        simulateDelay(15);
+
+        vacuum= vacuumRepository.findById(id).orElse(null);
         vacuum.setStatus(Status.STOPPED);
         vacuum.setBusy(false);
         vacuumRepository.save(vacuum);
@@ -134,6 +145,7 @@ public class VacuumService {
             discharge(id);
         }
         else{
+            vacuum= vacuumRepository.findById(id).orElse(null);
             vacuum.setUsageCount(vacuum.getUsageCount()+1);
             vacuumRepository.save(vacuum);
         }
@@ -144,24 +156,30 @@ public class VacuumService {
     @Async
     public CompletableFuture<Void> discharge(Long id) throws IllegalStateException{
         System.out.println("Discharging vacuum with id: " + id);
-
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+
         if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
+            logError(vacuum, VacuumOperation.DISCHARGE, (vacuum.getBusy())? "Vacuum was busy." : "Vacuum was not stopped.");
             throw new IllegalStateException("Invalid operation on the vacuum.");
         }
 
         vacuum.setBusy(true);
         vacuumRepository.save(vacuum);
 
-        simulateDelay(15); // Stay with the same status for 15 seconds
+        simulateDelay(15);
+
+        vacuum= vacuumRepository.findById(id).orElse(null);
         vacuum.setStatus(Status.DISCHARGING);
         vacuumRepository.save(vacuum);
 
-        simulateDelay(15); // Simulate discharge delay
+        simulateDelay(15);
+
+        vacuum= vacuumRepository.findById(id).orElse(null);
         vacuum.setStatus(Status.STOPPED);
         vacuum.setUsageCount(0);
         vacuum.setBusy(false);
         vacuumRepository.save(vacuum);
+
         return CompletableFuture.completedFuture(null);
     }
 
@@ -184,7 +202,7 @@ public class VacuumService {
         taskScheduler.schedule(
                 () -> executeScheduledOperation(vacuum, operation),
                 new CronTrigger(getCronExpression(scheduledTime)));
-        System.out.println("Scheduled operation: " + operation + " on vacuum with id: " + id + " at: " + scheduledTime + "with cron: " + getCronExpression(scheduledTime));
+        System.out.println("Scheduled operation: " + operation + " on vacuum with id: " + id + " at: " + scheduledTime + " with cron: " + getCronExpression(scheduledTime));
 
         return CompletableFuture.completedFuture(null);
     }
@@ -210,11 +228,13 @@ public class VacuumService {
                 discharge(vacuum.getId());
                 break;
             default:
-                logError(vacuum, operation, "Unsupported operation.");
+                System.out.println("Unsupported operation. Switch");
+//                logError(vacuum, operation, "Unsupported operation.");
         }
     }
 
     private void logError(Vacuum vacuum, VacuumOperation operation, String errorMessage) {
+        System.out.println("Logging error for vacuum: " + vacuum.getId());
         VacuumError vacuumError = new VacuumError();
         vacuumError.setVacuum(vacuum);
         vacuumError.setOperation(operation);
@@ -223,10 +243,37 @@ public class VacuumService {
         vacuumErrorRepository.save(vacuumError);
     }
 
+//    Vacuum Errors
+    public List<VacuumErrorResponse> getAllVacuumErrorsForUser(){
+        User user = getUser();
+        List<Vacuum> allVacuums = vacuumRepository.findAll();
+
+        List<Vacuum> userVacuums = new ArrayList<>();
+        for (Vacuum vacuum:allVacuums) {
+            if (vacuum.getUser().getId().equals(user.getId())){
+                userVacuums.add(vacuum);
+            }
+        }
+
+        List<VacuumError> userVacuumErrors = new ArrayList<>();
+
+        for (Vacuum vacuum: userVacuums) {
+            for (VacuumError vacuumError: vacuum.getVacuumErrors()) {
+                userVacuumErrors.add(vacuumError);
+            }
+        }
+
+//        System.out.println("USER VACUUM ERRORS:\t"+userVacuumErrors);
+        return userVacuumErrors.stream().map(Mapper::vacuumErrorToVacuumErrorResponse).collect(Collectors.toList());
+    }
 
     // Test
     public List<Vacuum> findEveryone() {
         return this.vacuumRepository.findAll();
+    }
+
+    public List<VacuumError> getAllVacuumErrors(){
+        return this.vacuumErrorRepository.findAll();
     }
 
 
@@ -234,7 +281,7 @@ public class VacuumService {
 
     private User getUser(){
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("EMAIL:\t"+email);
+//        System.out.println("EMAIL:\t"+email);
         return this.userRepository.findByEmail(email);
     }
 

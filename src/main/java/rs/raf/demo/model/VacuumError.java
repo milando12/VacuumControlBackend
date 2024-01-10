@@ -20,15 +20,15 @@ public class VacuumError {
     private Long id;
 
     @Column
-    @NotBlank(message = "Message is mandatory")
+//    @NotBlank(message = "Message is mandatory")
     private String message;
 
     @Column
-    @NotBlank(message = "Operation is mandatory")
+//    @NotBlank(message = "Operation is mandatory")
     private VacuumOperation operation;
 
     @Column
-    @NotBlank(message = "Date is mandatory")
+//    @NotBlank(message = "Date is mandatory")
     private LocalDate date;
 
     @ManyToOne

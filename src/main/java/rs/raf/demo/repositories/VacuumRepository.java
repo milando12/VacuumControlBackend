@@ -11,4 +11,5 @@ import java.util.List;
 public interface VacuumRepository  extends JpaRepository<Vacuum, Long> {
 //    List<Vacuum> findAllByActiveIsTrueAndUserId(Long userId);
     List<Vacuum> findAllByActiveIsTrueAndUser_Id(Long userId);
+    List<Vacuum> findAllByUser(User user);
 }
