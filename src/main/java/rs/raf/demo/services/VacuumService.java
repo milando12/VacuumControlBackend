@@ -1,26 +1,30 @@
 package rs.raf.demo.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import rs.raf.demo.dto.Mapper;
 import rs.raf.demo.model.User;
 import rs.raf.demo.model.Vacuum;
+import rs.raf.demo.model.VacuumError;
 import rs.raf.demo.model.enums.Status;
+import rs.raf.demo.model.enums.VacuumOperation;
 import rs.raf.demo.repositories.UserRepository;
+import rs.raf.demo.repositories.VacuumErrorRepository;
 import rs.raf.demo.repositories.VacuumRepository;
-import rs.raf.demo.requests.FilterRequest;
-import rs.raf.demo.requests.VacuumRequest;
-import rs.raf.demo.responses.VacuumResponse;
+import rs.raf.demo.dto.requests.FilterRequest;
+import rs.raf.demo.dto.requests.VacuumRequest;
+import rs.raf.demo.dto.responses.VacuumResponse;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -29,11 +33,15 @@ import java.util.stream.Collectors;
 public class VacuumService {
     private VacuumRepository vacuumRepository;
     private UserRepository userRepository;
+    private TaskScheduler taskScheduler;
+    private VacuumErrorRepository vacuumErrorRepository;
 
     @Autowired
-    public VacuumService(UserRepository userRepository, VacuumRepository vacuumRepository) {
+    public VacuumService(UserRepository userRepository, VacuumRepository vacuumRepository, TaskScheduler taskScheduler, VacuumErrorRepository vacuumErrorRepository) {
         this.vacuumRepository = vacuumRepository;
         this.userRepository = userRepository;
+        this.taskScheduler = taskScheduler;
+        this.vacuumErrorRepository = vacuumErrorRepository;
     }
 
     public Vacuum add(VacuumRequest vacuumRequest) {
@@ -85,13 +93,14 @@ public class VacuumService {
 // Start, Stop, Discharge
     //TODO: Add time standard deviation
     @Async
-    public CompletableFuture<Void> start(Long id) {
+    public CompletableFuture<Void> start(Long id) throws IllegalStateException{
+        System.out.println("Starting vacuum with id: " + id);
+
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
         if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
             System.err.println("Invalid operation on the vacuum.");
             System.out.println(vacuum.getStatus());
             throw new IllegalStateException("Invalid operation on the vacuum.");
-
         }
 
         vacuum.setBusy(true);
@@ -105,7 +114,9 @@ public class VacuumService {
     }
 
     @Async
-    public CompletableFuture<Void> stop(Long id) {
+    public CompletableFuture<Void> stop(Long id) throws IllegalStateException{
+        System.out.println("Stopping vacuum with id: " + id);
+
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
         if (vacuum == null || !vacuum.getStatus().equals(Status.RUNNING) || vacuum.getBusy()) {
             throw new IllegalStateException("Invalid operation on the vacuum.");
@@ -131,7 +142,9 @@ public class VacuumService {
     }
 
     @Async
-    public CompletableFuture<Void> discharge(Long id) {
+    public CompletableFuture<Void> discharge(Long id) throws IllegalStateException{
+        System.out.println("Discharging vacuum with id: " + id);
+
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
         if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
             throw new IllegalStateException("Invalid operation on the vacuum.");
@@ -159,6 +172,57 @@ public class VacuumService {
             Thread.currentThread().interrupt();
         }
     }
+
+//    Scheduler
+    public CompletableFuture<Void> scheduleOperation(Long id, VacuumOperation operation, String scheduledTimeString) {
+        Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
+
+        LocalDateTime scheduledTime = LocalDateTime.parse(scheduledTimeString,
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        // Schedule the operation
+        taskScheduler.schedule(
+                () -> executeScheduledOperation(vacuum, operation),
+                new CronTrigger(getCronExpression(scheduledTime)));
+        System.out.println("Scheduled operation: " + operation + " on vacuum with id: " + id + " at: " + scheduledTime + "with cron: " + getCronExpression(scheduledTime));
+
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private String getCronExpression(LocalDateTime localDateTime) {
+        return String.format("%d %d %d %d %d ?",
+                localDateTime.getSecond(),
+                localDateTime.getMinute(),
+                localDateTime.getHour(),
+                localDateTime.getDayOfMonth(),
+                localDateTime.getMonthValue());
+    }
+
+    private void executeScheduledOperation(Vacuum vacuum, VacuumOperation operation) {
+        switch (operation) {
+            case START:
+                start(vacuum.getId());
+                break;
+            case STOP:
+                stop(vacuum.getId());
+                break;
+            case DISCHARGE:
+                discharge(vacuum.getId());
+                break;
+            default:
+                logError(vacuum, operation, "Unsupported operation.");
+        }
+    }
+
+    private void logError(Vacuum vacuum, VacuumOperation operation, String errorMessage) {
+        VacuumError vacuumError = new VacuumError();
+        vacuumError.setVacuum(vacuum);
+        vacuumError.setOperation(operation);
+        vacuumError.setDate(LocalDate.now());
+        vacuumError.setMessage(errorMessage);
+        vacuumErrorRepository.save(vacuumError);
+    }
+
 
     // Test
     public List<Vacuum> findEveryone() {
