@@ -9,7 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
-import rs.raf.demo.requests.UserUpdateRequest;
+import rs.raf.demo.dto.requests.UserUpdateRequest;
 import rs.raf.demo.services.UserService;
 
 import javax.validation.Valid;

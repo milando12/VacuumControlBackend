@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import rs.raf.demo.model.Permission;
 import rs.raf.demo.model.User;
 import rs.raf.demo.repositories.UserRepository;
-import rs.raf.demo.requests.UserUpdateRequest;
+import rs.raf.demo.dto.requests.UserUpdateRequest;
 
 import java.util.ArrayList;
 import java.util.List;

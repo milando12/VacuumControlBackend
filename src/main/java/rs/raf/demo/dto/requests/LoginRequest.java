@@ -1,4 +1,4 @@
-package rs.raf.demo.requests;
+package rs.raf.demo.dto.requests;
 
 import lombok.Data;
 

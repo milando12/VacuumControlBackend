@@ -1,10 +1,9 @@
-package rs.raf.demo.requests;
+package rs.raf.demo.dto.requests;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import rs.raf.demo.model.enums.Status;
 
 import java.util.List;
 

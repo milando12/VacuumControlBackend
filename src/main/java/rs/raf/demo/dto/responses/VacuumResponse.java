@@ -1,4 +1,4 @@
-package rs.raf.demo.responses;
+package rs.raf.demo.dto.responses;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

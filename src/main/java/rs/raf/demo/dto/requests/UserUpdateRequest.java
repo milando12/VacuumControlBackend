@@ -1,11 +1,9 @@
-package rs.raf.demo.requests;
+package rs.raf.demo.dto.requests;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import javax.persistence.Entity;
 
 @Data
 @AllArgsConstructor

@@ -15,14 +15,25 @@ import java.util.Map;
 public class ExceptionHandlerController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class})
     public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException exception) {
+        System.err.println("Exception Handler Controller ");
         Map<String, String> errors = new HashMap<>();
         for (ObjectError error: exception.getBindingResult().getAllErrors()) {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         }
+
+        return errors;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({IllegalStateException.class})
+    public Map<String, String> handleBadVacuumRequest(MethodArgumentNotValidException exception) {
+        System.err.println("Exception Handler Controller, handleBadVacuumRequest");
+        Map<String, String> errors = new HashMap<>();
+        errors.put("error", exception.getMessage());
 
         return errors;
     }

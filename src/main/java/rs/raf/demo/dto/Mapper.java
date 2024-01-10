@@ -1,7 +1,7 @@
 package rs.raf.demo.dto;
 
 import rs.raf.demo.model.Vacuum;
-import rs.raf.demo.responses.VacuumResponse;
+import rs.raf.demo.dto.responses.VacuumResponse;
 
 public class Mapper {
     public static VacuumResponse vacuumToVacuumResponse(Vacuum vacuum) {
