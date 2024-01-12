@@ -76,7 +76,7 @@ public class VacuumService {
         return this.vacuumRepository.findAll();
     }
 
-//  Prettiest solution:     <3
+//  Prettiest solution:
     public List<VacuumResponse> search(FilterRequest filterRequest) {
     String name = filterRequest.getName();
     List<Status> statuses = getStatuses(filterRequest.getStatuses());
@@ -97,90 +97,89 @@ public class VacuumService {
     //TODO: Add time standard deviation
     //TODO: catch ObjectOptimisticLockingFailureException and logg it, just a try-catching block around the save method
     @Async
-    public CompletableFuture<Void> start(Long id) throws IllegalStateException{
+    public CompletableFuture<Void> start(Long id) throws IllegalStateException {
         System.out.println("Starting vacuum with id: " + id);
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
 
         if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
-            logError(vacuum, VacuumOperation.START, (vacuum.getBusy())? "Vacuum was busy." : "Vacuum was not stopped.");
+            logError(vacuum, VacuumOperation.START, (vacuum.getBusy()) ? "Vacuum was busy." : "Vacuum was not stopped.");
             throw new IllegalStateException("Invalid operation on the vacuum.");
         }
 
         vacuum.setBusy(true);
         vacuumRepository.save(vacuum);
-//        System.out.println("Busy set to true "+ vacuumRepository.findById(id));
 
-        simulateDelay(15);
+        CompletableFuture<Void> delayFuture = CompletableFuture.runAsync(() -> simulateDelay(15));
 
-        vacuum= vacuumRepository.findById(id).orElse(null);
-        vacuum.setStatus(Status.RUNNING);
-        vacuum.setBusy(false);
-        vacuumRepository.save(vacuum);
-//        System.out.println("Busy set to false "+ vacuumRepository.findById(id));
-
-        return CompletableFuture.completedFuture(null);
+        return delayFuture.thenComposeAsync((unused) -> {
+            Vacuum updatedVacuum = vacuumRepository.findById(id).orElse(null);
+            updatedVacuum.setStatus(Status.RUNNING);
+            updatedVacuum.setBusy(false);
+            vacuumRepository.save(updatedVacuum);
+            return CompletableFuture.completedFuture(null);
+        });
     }
 
     @Async
-    public CompletableFuture<Void> stop(Long id) throws IllegalStateException{
+    public CompletableFuture<Void> stop(Long id) throws IllegalStateException {
         System.out.println("Stopping vacuum with id: " + id);
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
 
         if (vacuum == null || !vacuum.getStatus().equals(Status.RUNNING) || vacuum.getBusy()) {
-            logError(vacuum, VacuumOperation.STOP, (vacuum.getBusy())? "Vacuum was busy." : "Vacuum was not running.");
+            logError(vacuum, VacuumOperation.STOP, (vacuum.getBusy()) ? "Vacuum was busy." : "Vacuum was not running.");
             throw new IllegalStateException("Invalid operation on the vacuum.");
         }
 
         vacuum.setBusy(true);
         vacuumRepository.save(vacuum);
 
-        simulateDelay(15);
+        CompletableFuture<Void> delayFuture = CompletableFuture.runAsync(() -> simulateDelay(15));
 
-        vacuum= vacuumRepository.findById(id).orElse(null);
-        vacuum.setStatus(Status.STOPPED);
-        vacuum.setBusy(false);
-        vacuumRepository.save(vacuum);
-
-        if(vacuum.getUsageCount()== 2){
-            discharge(id);
-        }
-        else{
-            vacuum= vacuumRepository.findById(id).orElse(null);
-            vacuum.setUsageCount(vacuum.getUsageCount()+1);
-            vacuumRepository.save(vacuum);
-        }
-
-        return CompletableFuture.completedFuture(null);
+        return delayFuture.thenComposeAsync((unused) -> {
+            Vacuum updatedVacuum = vacuumRepository.findById(id).orElse(null);
+            updatedVacuum.setStatus(Status.STOPPED);
+            updatedVacuum.setBusy(false);
+            if (updatedVacuum.getUsageCount() == 2) {
+                return discharge(id);
+            } else {
+                updatedVacuum.setUsageCount(updatedVacuum.getUsageCount() + 1);
+                vacuumRepository.save(updatedVacuum);
+                return CompletableFuture.completedFuture(null);
+            }
+        });
     }
 
     @Async
-    public CompletableFuture<Void> discharge(Long id) throws IllegalStateException{
+    public CompletableFuture<Void> discharge(Long id) throws IllegalStateException {
         System.out.println("Discharging vacuum with id: " + id);
         Vacuum vacuum = vacuumRepository.findById(id).orElse(null);
 
         if (vacuum == null || !vacuum.getStatus().equals(Status.STOPPED) || vacuum.getBusy()) {
-            logError(vacuum, VacuumOperation.DISCHARGE, (vacuum.getBusy())? "Vacuum was busy." : "Vacuum was not stopped.");
+            logError(vacuum, VacuumOperation.DISCHARGE, (vacuum.getBusy()) ? "Vacuum was busy." : "Vacuum was not stopped.");
             throw new IllegalStateException("Invalid operation on the vacuum.");
         }
 
         vacuum.setBusy(true);
         vacuumRepository.save(vacuum);
 
-        simulateDelay(15);
+        CompletableFuture<Void> delayFuture = CompletableFuture.runAsync(() -> simulateDelay(15));
 
-        vacuum= vacuumRepository.findById(id).orElse(null);
-        vacuum.setStatus(Status.DISCHARGING);
-        vacuumRepository.save(vacuum);
+        return delayFuture.thenComposeAsync((unused) -> {
+            Vacuum updatedVacuum0 = vacuumRepository.findById(id).orElse(null);
+            updatedVacuum0.setStatus(Status.DISCHARGING);
+            vacuumRepository.save(updatedVacuum0);
 
-        simulateDelay(15);
+            CompletableFuture<Void> dischargeDelayFuture = CompletableFuture.runAsync(() -> simulateDelay(15));
 
-        vacuum= vacuumRepository.findById(id).orElse(null);
-        vacuum.setStatus(Status.STOPPED);
-        vacuum.setUsageCount(0);
-        vacuum.setBusy(false);
-        vacuumRepository.save(vacuum);
-
-        return CompletableFuture.completedFuture(null);
+            return dischargeDelayFuture.thenComposeAsync((secondUnused) -> {
+                Vacuum updatedVacuum = vacuumRepository.findById(id).orElse(null);
+                updatedVacuum.setStatus(Status.STOPPED);
+                updatedVacuum.setUsageCount(0);
+                updatedVacuum.setBusy(false);
+                vacuumRepository.save(updatedVacuum);
+                return CompletableFuture.completedFuture(null);
+            });
+        });
     }
 
     private void simulateDelay(int seconds) {
